@@ -1,21 +1,33 @@
 <?php 
 
     include "service/database.php";
+    session_start();
+
+    $login_message = "";
+
+    if(isset($_SESSION["is_login"])) {
+        header("location: dashboard.php");
+    }
 
     if(isset($_POST['login'])) {
         $username = $_POST['username'];
         $password = $_POST['password'];
+        $hash_password = hash('sha256', $password);
 
-        $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'
-        ";
+        $sql = "SELECT * FROM users WHERE username='$username' AND password='$hash_password'";
 
         $result = $db->query($sql);
 
         if($result->num_rows > 0) {
-            echo "datanya ada";
-        } else {
-            echo "akun tidak ditemukan";
+            $data = $result->fetch_assoc();
+            $_SESSION["username"] = $data["username"];
+            $_SESSION["is_login"] = true;
+
+            header("location: dashboard.php");
+        }else {
+            $login_message = "akun tidak ditemukan";
         }
+        $db->close();
     }
 ?>
 
@@ -29,6 +41,7 @@
 <body>
     <?php include "layout/header.html" ?>
     <h3>MASUK AKUN</h3>
+    <i><?= $login_message ?> </i>
     <form action="login.php" method="POST">
         <input type="text" placeholder="username" name="username"/>
         <input type="text" placeholder="password" name="password"/>
